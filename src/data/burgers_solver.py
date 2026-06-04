@@ -6,6 +6,8 @@ import numpy as np
 
 from src.ansatz.heat_ansatz import heat_ansatz_numpy
 
+_NEAR_CONSTANT_STD_THRESHOLD = 1e-8
+
 
 def sample_smooth_initial_conditions(
     num_samples: int,
@@ -31,8 +33,9 @@ def sample_smooth_initial_conditions(
         u0[i] = sample
 
     std = np.std(u0, axis=1, keepdims=True)
-    std[std < 1e-8] = 1.0
-    u0 = u0 / std
+    # Keep near-constant samples unchanged by using unit scaling for tiny std.
+    scale = np.where(std < _NEAR_CONSTANT_STD_THRESHOLD, 1.0, std)
+    u0 = u0 / scale
     return x.astype(np.float32), u0.astype(np.float32)
 
 

@@ -97,7 +97,9 @@ def load_or_generate_burgers_data(
     return loaded
 
 
-def train_test_split(data: dict[str, np.ndarray], test_ratio: float, seed: int) -> tuple[dict[str, np.ndarray], dict[str, np.ndarray]]:
+def train_test_split(
+    data: dict[str, np.ndarray], test_ratio: float, seed: int
+) -> tuple[dict[str, np.ndarray], dict[str, np.ndarray]]:
     n = data["u0"].shape[0]
     rng = np.random.default_rng(seed)
     indices = np.arange(n)
@@ -106,6 +108,13 @@ def train_test_split(data: dict[str, np.ndarray], test_ratio: float, seed: int) 
     test_idx = indices[:n_test]
     train_idx = indices[n_test:]
 
-    train = {k: v[train_idx] if v.ndim > 1 else v for k, v in data.items()}
-    test = {k: v[test_idx] if v.ndim > 1 else v for k, v in data.items()}
+    train = {}
+    test = {}
+    for k, v in data.items():
+        if k == "x":
+            train[k] = v
+            test[k] = v
+        else:
+            train[k] = v[train_idx]
+            test[k] = v[test_idx]
     return train, test

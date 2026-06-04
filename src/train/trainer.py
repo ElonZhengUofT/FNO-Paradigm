@@ -30,22 +30,6 @@ class Trainer:
         self.experiment = experiment
         self.criterion = nn.MSELoss()
 
-    def _forward(self, batch: dict[str, torch.Tensor]) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-        features = batch["input"].to(self.device)
-        target = batch["target"].to(self.device)
-        u_true = batch["u_true"].to(self.device)
-        u_heat = batch["u_heat"].to(self.device)
-
-        if self.experiment == "baseline":
-            pred = self.model(features).squeeze(-1)
-            supervised_target = target
-        else:
-            pred, residual = self.model(features, u_heat)
-            supervised_target = target
-            target = residual * 0.0 + supervised_target
-
-        return pred, supervised_target, u_true
-
     def train_epoch(self, loader: DataLoader) -> float:
         self.model.train()
         total_loss = 0.0
@@ -62,6 +46,7 @@ class Trainer:
                 pred = self.model(features).squeeze(-1)
                 loss = self.criterion(pred, target)
             else:
+                # Train residual branch only; full prediction is not used in this loss.
                 _, residual = self.model(features, u_heat)
                 loss = self.criterion(residual, target)
 
@@ -92,8 +77,10 @@ class Trainer:
                 mse = self.criterion(pred, target)
             else:
                 pred, residual = self.model(features, u_heat)
+                # For residual training, supervised target is residual=u_true-u_heat.
                 mse = self.criterion(residual, target)
 
+            # Relative L2 is always computed on full solution predictions.
             rel = relative_l2_error(pred, u_true)
 
             batch_size = target.shape[0]

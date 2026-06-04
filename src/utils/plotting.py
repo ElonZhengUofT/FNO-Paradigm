@@ -26,7 +26,7 @@ def save_comparison_plot(
         plt.plot(x, baseline_pred, label="baseline_pred", alpha=0.85)
     if residual_pred is not None:
         plt.plot(x, residual_pred, label="residual_pred", alpha=0.85)
-        plt.plot(x, residual_pred - u_true, label="residual_error", alpha=0.85)
+        plt.plot(x, residual_pred - u_true, label="solution_error", alpha=0.85)
     plt.xlabel("x")
     plt.ylabel("u(x, T)")
     plt.legend()

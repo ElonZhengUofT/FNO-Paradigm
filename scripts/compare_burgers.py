@@ -56,11 +56,15 @@ def load_config(args: argparse.Namespace) -> dict:
     with open(args.config, "r", encoding="utf-8") as f:
         cfg = yaml.safe_load(f)
 
+    # Keep allow-list explicit so adding new CLI-only keys is intentional.
+    allowed_extra = {"use_mat"}
     for key, value in vars(args).items():
         if key == "config":
             continue
         if value is not None:
-            cfg[key.replace("-", "_")] = value
+            if key not in cfg and key not in allowed_extra:
+                raise KeyError(f"Unknown config override: '{key}'")
+            cfg[key] = value
 
     if cfg.get("device", "auto") == "auto":
         cfg["device"] = "cuda" if torch.cuda.is_available() else "cpu"
@@ -119,7 +123,12 @@ def build_model(cfg: dict, experiment: str) -> torch.nn.Module:
 
 
 @torch.no_grad()
-def collect_predictions(model: torch.nn.Module, loader: DataLoader, experiment: str, device: torch.device) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+def collect_predictions(
+    model: torch.nn.Module,
+    loader: DataLoader,
+    experiment: str,
+    device: torch.device,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     model.eval()
     preds, truths, u0s, u_heats = [], [], [], []
     for batch in loader:
