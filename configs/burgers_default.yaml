@@ -1,0 +1,17 @@
+experiment: both
+n_grid: 256
+num_samples: 1200
+epochs: 500
+batch_size: 20
+modes: 16
+width: 64
+layers: 4
+nu: 0.1
+T: 1.0
+lr: 0.001
+seed: 42
+data_path: data/burgers_synthetic.npz
+save_dir: results/default_run
+train_split: 0.8
+plot_samples: 3
+hidden_dim: 128
