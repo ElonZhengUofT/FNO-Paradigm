@@ -41,7 +41,7 @@ In Fourier space:
 Then learn the residual:
 
 \[
-\nu_{pred}=u_{heat}+\mathrm{FNO}_\theta([u_0,u_{heat},x])
+u_{pred}=u_{heat}+\mathrm{FNO}_\theta([u_0,u_{heat},x])
 \]
 
 Why this may help: the heat ansatz captures dissipative smoothing, while FNO focuses on nonlinear convective correction.

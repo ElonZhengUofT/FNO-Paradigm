@@ -1,3 +1,5 @@
+from typing import Tuple
+
 import torch
 import torch.nn as nn
 
@@ -15,7 +17,7 @@ class HeatResidualFNO1d(nn.Module):
             hidden_dim=hidden_dim,
         )
 
-    def forward(self, features: torch.Tensor, u_heat: torch.Tensor):
+    def forward(self, features: torch.Tensor, u_heat: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         # features: [batch, n_grid, 3] = [u0, u_heat, x]
         # u_heat: [batch, n_grid]
         residual = self.backbone(features).squeeze(-1)  # [batch, n_grid]

@@ -10,4 +10,7 @@ def save_checkpoint(path: str, payload: Dict[str, Any]) -> None:
 
 
 def load_checkpoint(path: str, map_location: str = "cpu") -> Dict[str, Any]:
-    return torch.load(path, map_location=map_location)
+    try:
+        return torch.load(path, map_location=map_location, weights_only=True)
+    except TypeError:
+        return torch.load(path, map_location=map_location)

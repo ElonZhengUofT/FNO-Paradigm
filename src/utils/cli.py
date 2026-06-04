@@ -1,21 +1,11 @@
-#!/usr/bin/env python
 import argparse
-from pathlib import Path
-import sys
 from typing import Any, Dict
 
 import yaml
 
-ROOT = Path(__file__).resolve().parents[1]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
 
-from src.train.trainer import TrainConfig, run_training
-from src.utils.seed import set_seed
-
-
-def parse_args():
-    parser = argparse.ArgumentParser(description="Compare baseline and residual FNO on Burgers")
+def parse_burgers_args(description: str) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=description)
     parser.add_argument("--config", type=str, default="configs/burgers_default.yaml")
     parser.add_argument("--experiment", type=str, choices=["baseline", "residual", "both"], default=None)
     parser.add_argument("--n-grid", type=int, default=None)
@@ -42,53 +32,10 @@ def load_config(path: str) -> Dict[str, Any]:
         return yaml.safe_load(f)
 
 
-def merged_config(args) -> Dict[str, Any]:
+def merged_config(args: argparse.Namespace) -> Dict[str, Any]:
     cfg = load_config(args.config)
     for key, value in vars(args).items():
         if key == "config" or value is None:
             continue
         cfg[key.replace("-", "_")] = value
     return cfg
-
-
-def run_single(cfg_dict: Dict[str, Any], experiment_name: str) -> None:
-    cfg = TrainConfig(
-        experiment=experiment_name,
-        n_grid=cfg_dict["n_grid"],
-        num_samples=cfg_dict["num_samples"],
-        epochs=cfg_dict["epochs"],
-        batch_size=cfg_dict["batch_size"],
-        modes=cfg_dict["modes"],
-        width=cfg_dict["width"],
-        layers=cfg_dict["layers"],
-        nu=cfg_dict["nu"],
-        T=cfg_dict["T"],
-        lr=cfg_dict["lr"],
-        seed=cfg_dict["seed"],
-        data_path=cfg_dict["data_path"],
-        save_dir=cfg_dict["save_dir"],
-        train_split=cfg_dict["train_split"],
-        plot_samples=cfg_dict["plot_samples"],
-        hidden_dim=cfg_dict["hidden_dim"],
-    )
-    run_training(cfg)
-
-
-def main():
-    args = parse_args()
-    cfg = merged_config(args)
-
-    Path(cfg["save_dir"]).mkdir(parents=True, exist_ok=True)
-
-    if cfg["experiment"] == "both":
-        set_seed(cfg["seed"])
-        run_single(cfg, "baseline")
-        set_seed(cfg["seed"])
-        run_single(cfg, "residual")
-    else:
-        set_seed(cfg["seed"])
-        run_single(cfg, cfg["experiment"])
-
-
-if __name__ == "__main__":
-    main()

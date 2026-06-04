@@ -7,6 +7,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 from torch.optim import Adam
+from torch.utils.data import DataLoader
 
 from src.data.burgers_dataset import DatasetConfig, make_dataloaders
 from src.models.ansatz_fno import HeatResidualFNO1d
@@ -42,7 +43,7 @@ class TrainConfig:
 def _make_features(batch: Dict[str, torch.Tensor], experiment: ExperimentType) -> torch.Tensor:
     u0 = batch["u0"]
     u_heat = batch["u_heat"]
-    x = batch["x"].unsqueeze(0).repeat(u0.shape[0], 1)
+    x = batch["x"]
 
     if experiment == "baseline":
         return torch.stack([u0, x], dim=-1)
@@ -108,7 +109,7 @@ def run_training(cfg: TrainConfig) -> Dict[str, List[float]]:
     save_root = Path(cfg.save_dir) / cfg.experiment
     save_root.mkdir(parents=True, exist_ok=True)
 
-    metrics = {"train_mse": [], "test_mse": [], "test_rel_l2": []}
+    metrics = {"train_mse": [], "test_mse": [], "test_rel_l2_error": []}
 
     for epoch in range(1, cfg.epochs + 1):
         model.train()
@@ -135,7 +136,7 @@ def run_training(cfg: TrainConfig) -> Dict[str, List[float]]:
 
         metrics["train_mse"].append(train_mse)
         metrics["test_mse"].append(test_mse)
-        metrics["test_rel_l2"].append(test_rel)
+        metrics["test_rel_l2_error"].append(test_rel)
 
         print(
             f"[{cfg.experiment}] epoch={epoch:04d} train_mse={train_mse:.6e} "
@@ -164,7 +165,7 @@ def run_training(cfg: TrainConfig) -> Dict[str, List[float]]:
 
 def _save_sample_plots(
     model: nn.Module,
-    test_loader,
+    test_loader: DataLoader,
     cfg: TrainConfig,
     save_root: Path,
     device: torch.device,
@@ -200,7 +201,7 @@ def _save_sample_plots(
                 "u0": u0,
                 "u_true": u_true,
                 "u_heat": u_heat,
-                "baseline_or_total_pred": u_pred,
+                "u_pred": u_pred,
                 "residual_pred": res_pred,
                 "residual_error": res_err,
             },
@@ -210,7 +211,7 @@ def _save_sample_plots(
 def _save_summary_markdown(metrics: Dict[str, List[float]], cfg: TrainConfig, save_root: Path) -> None:
     final_train = metrics["train_mse"][-1]
     final_test = metrics["test_mse"][-1]
-    final_rel = metrics["test_rel_l2"][-1]
+    final_rel = metrics["test_rel_l2_error"][-1]
 
     text = (
         f"# {cfg.experiment} summary\n\n"

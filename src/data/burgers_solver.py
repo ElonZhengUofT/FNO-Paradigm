@@ -5,6 +5,9 @@ import numpy as np
 
 from src.ansatz.heat_ansatz import heat_ansatz
 
+SMOOTHNESS_SIGMA = 8.0
+SMOOTHNESS_STRENGTH = 0.5
+
 
 def _dealias_mask(n_grid: int) -> np.ndarray:
     n_modes = n_grid // 2 + 1
@@ -44,7 +47,8 @@ def solve_burgers_rk4(u0: np.ndarray, nu: float, T: float, dt: float) -> np.ndar
 def sample_random_smooth_u0(n_grid: int, rng: np.random.Generator) -> np.ndarray:
     n_modes = n_grid // 2 + 1
     k = np.arange(n_modes)
-    decay = np.exp(-0.5 * (k / 8.0) ** 2)
+    # Gaussian spectral decay to favor smooth low-frequency initial conditions.
+    decay = np.exp(-SMOOTHNESS_STRENGTH * (k / SMOOTHNESS_SIGMA) ** 2)
 
     real = rng.normal(size=n_modes)
     imag = rng.normal(size=n_modes)
@@ -86,4 +90,10 @@ def generate_burgers_dataset(
 
 def save_burgers_npz(path: str, u0: np.ndarray, uT: np.ndarray, u_heat: np.ndarray, x: np.ndarray) -> None:
     Path(path).parent.mkdir(parents=True, exist_ok=True)
-    np.savez(path, u0=u0.astype(np.float32), uT=uT.astype(np.float32), u_heat=u_heat.astype(np.float32), x=x.astype(np.float32))
+    np.savez(
+        path,
+        u0=u0.astype(np.float32),
+        uT=uT.astype(np.float32),
+        u_heat=u_heat.astype(np.float32),
+        x=x.astype(np.float32),
+    )
