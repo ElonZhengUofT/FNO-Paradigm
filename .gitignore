@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+*.pyo
+
+# Generated datasets and experiment outputs
+data/*.npz
+results/**
+!results/.gitkeep
+
+# Local environments
+.venv/
